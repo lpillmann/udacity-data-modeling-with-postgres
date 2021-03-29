@@ -1,26 +1,67 @@
-# DROP TABLES
 
-songplay_table_drop = ""
-user_table_drop = ""
-song_table_drop = ""
-artist_table_drop = ""
-time_table_drop = ""
+# DROP TABLES
+songplay_table_drop = "DROP TABLE IF EXISTS songplays"
+user_table_drop = "DROP TABLE IF EXISTS users"
+song_table_drop = "DROP TABLE IF EXISTS songs"
+artist_table_drop = "DROP TABLE IF EXISTS artists"
+time_table_drop = "DROP TABLE IF EXISTS time"
 
 # CREATE TABLES
 
 songplay_table_create = ("""
+    CREATE TABLE songplays (
+        songplay_id integer NOT NULL,
+        start_time timestamp with time zone,
+        user_id integer NOT NULL,
+        level text,
+        song_id integer NOT NULL,
+        artist_id integer NOT NULL,
+        session_id integer NOT NULL,
+        location text,
+        user_agent text
+    )
 """)
 
 user_table_create = ("""
+    CREATE TABLE users (
+        user_id integer PRIMARY KEY,
+        first_name text,
+        last_name text,
+        gender text,
+        level text
+    )
 """)
 
 song_table_create = ("""
+    CREATE TABLE songs (
+        song_id integer PRIMARY KEY,
+        title text,
+        artist_id integer,
+        year integer,
+        duration integer
+    )
 """)
 
 artist_table_create = ("""
+    CREATE TABLE artists (
+        artist_id integer PRIMARY KEY,
+        name text,
+        location text,
+        latitude float,
+        longitude float
+    )
 """)
 
 time_table_create = ("""
+    CREATE TABLE time (
+        start_time timestamp with time zone,
+        hour integer,
+        day integer,
+        week integer,
+        month integer,
+        year integer,
+        weekday text
+    )
 """)
 
 # INSERT RECORDS
