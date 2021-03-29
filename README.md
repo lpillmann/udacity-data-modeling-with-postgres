@@ -8,3 +8,6 @@ The project uses [`poetry`](https://python-poetry.org/) as package manager. You 
 ```bash
 poetry install
 ```
+
+# Changes to template code
+- Updated database credentials to use local instance (database named `postgres`)
