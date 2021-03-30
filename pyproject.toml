@@ -8,6 +8,8 @@ authors = ["Lui Pillmann <lui.pillmann@gmail.com>"]
 python = "^3.8"
 pandas = "^1.2.3"
 psycopg2 = "^2.8.6"
+jupyterlab = "^3.0.12"
+ipython-sql = "^0.4.0"
 
 [tool.poetry.dev-dependencies]
 
