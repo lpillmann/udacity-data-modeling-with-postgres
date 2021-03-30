@@ -18,7 +18,14 @@ songplay_table_create = ("""
         artist_id integer NOT NULL,
         session_id integer NOT NULL,
         location text,
-        user_agent text
+        user_agent text,
+        UNIQUE (
+            songplay_id,
+            user_id,
+            song_id,
+            artist_id,
+            session_id
+        )
     )
 """)
 
