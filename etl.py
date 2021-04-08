@@ -136,7 +136,6 @@ def process_data(cur, conn, filepath, func):
     # iterate over files and process
     for i, datafile in enumerate(all_files, 1):
         func(conn, cur, datafile)
-        # conn.commit()
         print("{}/{} files processed.".format(i, num_files))
 
 
