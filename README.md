@@ -17,3 +17,4 @@ poetry install
 - Configure local Postgres with original credentials to enable easier review + document how to setup with Docker
 - Estimate LOE of topics to "make the project stand out" and implement some of them if feasible within the timeframe
 - Final review against project rubric
+    - Change log json read with tip provided [here](https://classroom.udacity.com/nanodegrees/nd027/parts/f7dbb125-87a2-4369-bb64-dc5c21bb668a/modules/a7801de4-ee3f-4531-b887-82dea67f47a6/lessons/01995bb4-db30-4e01-bf38-ff11b631be0f/concepts/a5609601-2314-4d8b-a7cf-e40048b3ee96)
