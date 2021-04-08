@@ -1,53 +1,108 @@
-import os
 import glob
-import psycopg2
+import json
+import os
+import uuid
+
 import pandas as pd
+import psycopg2
+from psycopg2.errors import UniqueViolation, NotNullViolation
+
 from sql_queries import *
 
 
-def process_song_file(cur, filepath):
+def execute(conn, cur, query, data):
+    """Custom execute function with error handling for each transaction"""
+    try:
+        cur.execute(query, data)
+        conn.commit()
+    except UniqueViolation as e:
+        # ignore duplicated records
+        print(f"Failed to insert record (skipping): {repr(e)}")
+        conn.rollback()
+    except NotNullViolation as e:
+        # ignore records whose song title is not present in songs table, hence song_id is unknown
+        if 'null value in column "song_id"' in str(e):
+            print(f"Failed to insert record (skipping): {repr(e)}")
+            conn.rollback()
+        # keep raising for other cases of NotNullViolation occurrences
+        else:
+            raise e 
+
+
+def process_song_file(conn, cur, filepath):
+    """Process song file to insert songs and artists data"""
+    # read contents of the file
+    with open(filepath, 'r') as f:
+        file_contents = json.load(f)
+    
     # open song file
-    df = 
+    df = pd.DataFrame.from_records(data=[file_contents], columns=file_contents.keys())
 
     # insert song record
-    song_data = 
-    cur.execute(song_table_insert, song_data)
+    song_data = (
+        df[["song_id", "title", "artist_id", "year", "duration"]]
+        .values
+        .tolist()
+        [0]
+    ) 
+    execute(conn, cur, song_table_insert, song_data)
     
     # insert artist record
-    artist_data = 
-    cur.execute(artist_table_insert, artist_data)
+    artist_data = (
+        df[["artist_id", "artist_name", "artist_location", "artist_latitude", "artist_longitude"]]
+        .values
+        .tolist()
+        [0]
+    ) 
+    execute(conn, cur, artist_table_insert, artist_data)
 
 
-def process_log_file(cur, filepath):
+def process_log_file(conn, cur, filepath):
+    """Process log file to insert time, users and songplays data"""
     # open log file
-    df = 
+    file_contents = [json.loads(line) for line in open(filepath, 'r')]
+    df = pd.DataFrame.from_records(data=file_contents, columns=file_contents[0].keys())
 
-    # filter by NextSong action
-    df = 
+    # filter by NextSong action and convert timestamp column to datetime
+    df = (
+        df
+        .query("page == 'NextSong'")
+        .assign(ts=lambda x: pd.to_datetime(x['ts'], unit='ms'))
+    )
 
-    # convert timestamp column to datetime
-    t = 
-    
+    # build time dataframe from timestamp column
+    time_df = (
+        df['ts']
+        .to_frame()
+        .rename(columns={'ts': 'start_time'})
+        .assign(hour=lambda x: x['start_time'].dt.hour)
+        .assign(day=lambda x: x['start_time'].dt.day)
+        .assign(week=lambda x: x['start_time'].dt.isocalendar().week)
+        .assign(month=lambda x: x['start_time'].dt.month)
+        .assign(year=lambda x: x['start_time'].dt.year)
+        .assign(weekday=lambda x: x['start_time'].dt.weekday)
+    )
+
     # insert time data records
-    time_data = 
-    column_labels = 
-    time_df = 
-
-    for i, row in time_df.iterrows():
-        cur.execute(time_table_insert, list(row))
+    for _, row in time_df.iterrows():
+        execute(conn, cur, time_table_insert, list(row))
 
     # load user table
-    user_df = 
+    user_df = (
+        df[['userId', 'firstName', 'lastName', 'gender', 'level']]
+        .drop_duplicates()
+    )
 
     # insert user records
-    for i, row in user_df.iterrows():
-        cur.execute(user_table_insert, row)
+    for _, row in user_df.iterrows():
+        execute(conn, cur, user_table_insert, row)
 
+    
     # insert songplay records
-    for index, row in df.iterrows():
+    for _, row in df.iterrows():
         
         # get songid and artistid from song and artist tables
-        cur.execute(song_select, (row.song, row.artist, row.length))
+        execute(conn, cur, song_select, (row.song, row.artist, row.length))
         results = cur.fetchone()
         
         if results:
@@ -56,14 +111,25 @@ def process_log_file(cur, filepath):
             songid, artistid = None, None
 
         # insert songplay record
-        songplay_data = 
-        cur.execute(songplay_table_insert, songplay_data)
+        songplay_data = (
+            str(uuid.uuid4()),
+            pd.to_datetime(row['ts'], unit='ms'),
+            row['userId'],
+            row['level'],
+            songid,
+            artistid,
+            row['sessionId'],
+            row['location'],
+            row['userAgent'],
+        )
+        execute(conn, cur, songplay_table_insert, songplay_data)
 
 
 def process_data(cur, conn, filepath, func):
+    """Generic caller function that gets all available files and calls desired process function to them in a loop"""
     # get all files matching extension from directory
     all_files = []
-    for root, dirs, files in os.walk(filepath):
+    for root, _, files in os.walk(filepath):
         files = glob.glob(os.path.join(root,'*.json'))
         for f in files :
             all_files.append(os.path.abspath(f))
@@ -74,13 +140,14 @@ def process_data(cur, conn, filepath, func):
 
     # iterate over files and process
     for i, datafile in enumerate(all_files, 1):
-        func(cur, datafile)
-        conn.commit()
+        func(conn, cur, datafile)
+        # conn.commit()
         print('{}/{} files processed.'.format(i, num_files))
 
 
 def main():
-    conn = psycopg2.connect("host=127.0.0.1 dbname=sparkifydb user=student password=student")
+    """Scrip entrypoint"""
+    conn = psycopg2.connect("host=127.0.0.1 dbname=sparkifydb user=postgres password=1234")
     cur = conn.cursor()
 
     process_data(cur, conn, filepath='data/song_data', func=process_song_file)
