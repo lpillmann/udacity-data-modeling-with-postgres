@@ -31,11 +31,10 @@ def execute(conn, cur, query, data):
 
 def process_song_file(conn, cur, filepath):
     """Process song file to insert songs and artists data"""
-    # read contents of the file
+    # open song file
     with open(filepath, "r") as f:
         file_contents = json.load(f)
 
-    # open song file
     df = pd.DataFrame.from_records(data=[file_contents], columns=file_contents.keys())
 
     # insert song record
