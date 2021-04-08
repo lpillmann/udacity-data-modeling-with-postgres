@@ -140,7 +140,7 @@ def process_data(cur, conn, filepath, func):
 
 
 def main():
-    """Scrip entrypoint"""
+    """Script entrypoint"""
     conn = psycopg2.connect(
         "host=127.0.0.1 dbname=sparkifydb user=postgres password=1234"
     )
