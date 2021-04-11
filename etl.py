@@ -30,10 +30,6 @@ def execute(conn, cur, query, data):
     try:
         cur.execute(query, data)
         conn.commit()
-    except UniqueViolation as e:
-        # ignore duplicated records
-        print(f"Failed to insert record (skipping): {repr(e)}")
-        conn.rollback()
     except NotNullViolation as e:
         # ignore records whose song title is not present in songs table, hence song_id is unknown
         if 'null value in column "song_id"' in str(e):
