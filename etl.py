@@ -11,7 +11,22 @@ from sql_queries import *
 
 
 def execute(conn, cur, query, data):
-    """Custom execute function with error handling for each transaction"""
+    """
+    Custom database execute function with error handling for each transaction.
+
+    Handles know exceptions and prints whole message to inform about the errors. Any unknown exceptions are
+    raised.
+
+    Parameters:
+    conn (psycopg2.connect()): Postgres connection object
+    cur (psycopg2.connect().cursor()): Postgres cursor object
+    query (str): Parametrized query to be executed
+    data (list): List of values that will be placed into each parameter in query
+
+    Returns:
+    None
+
+    """
     try:
         cur.execute(query, data)
         conn.commit()
@@ -30,7 +45,21 @@ def execute(conn, cur, query, data):
 
 
 def process_song_file(conn, cur, filepath):
-    """Process song file to insert songs and artists data"""
+    """
+    Process JSON song file to insert songs and artists data.
+
+    Receives a filepath, reads it into pandas DataFrame and selects set of columns for song and artist
+    tables to be inserted, passing it as lists to `execute` function.
+
+    Parameters:
+    conn (psycopg2.connect()): Postgres connection object
+    cur (psycopg2.connect().cursor()): Postgres cursor object
+    filepath (str): Absolute path of JSON file containing song data
+
+    Returns:
+    None
+
+    """
     # open song file
     with open(filepath, "r") as f:
         file_contents = json.load(f)
@@ -57,7 +86,21 @@ def process_song_file(conn, cur, filepath):
 
 
 def process_log_file(conn, cur, filepath):
-    """Process log file to insert time, users and songplays data"""
+    """
+    Process log file to insert time, users and songplays data.
+
+    Receives a filepath, reads it into pandas DataFrame and selects set of columns for time, user, and
+    songplay tables to be inserted, passing it as lists to `execute` function. 
+
+    Parameters:
+    conn (psycopg2.connect()): Postgres connection object
+    cur (psycopg2.connect().cursor()): Postgres cursor object
+    filepath (str): Absolute path of JSON file containing song data
+
+    Returns:
+    None
+
+    """
     # open log file
     file_contents = [json.loads(line) for line in open(filepath, "r")]
     df = pd.DataFrame.from_records(data=file_contents, columns=file_contents[0].keys())
@@ -87,7 +130,7 @@ def process_log_file(conn, cur, filepath):
     # load user table
     user_df = df[
         ["userId", "firstName", "lastName", "gender", "level"]
-    ].drop_duplicates()
+    ]
 
     # insert user records
     for _, row in user_df.iterrows():
@@ -106,7 +149,7 @@ def process_log_file(conn, cur, filepath):
             songid, artistid = None, None
 
         # insert songplay record
-        songplay_data = (
+        songplay_data = [
             str(uuid.uuid4()),
             pd.to_datetime(row["ts"], unit="ms"),
             row["userId"],
@@ -116,12 +159,26 @@ def process_log_file(conn, cur, filepath):
             row["sessionId"],
             row["location"],
             row["userAgent"],
-        )
+        ]
         execute(conn, cur, songplay_table_insert, songplay_data)
 
 
 def process_data(cur, conn, filepath, func):
-    """Generic caller function that gets all available files and calls desired process function to them in a loop"""
+    """
+    Generic caller function to get all available files and calls desired process function to them in a loop.
+
+    From a base directory path, walks through all content and returns absolute paths of all files within it.
+
+    Parameters:
+    conn (psycopg2.connect()): Postgres connection object
+    cur (psycopg2.connect().cursor()): Postgres cursor object
+    filepath (str): Absolute path of JSON file containing song data
+    func (Callable): Function to be used to process the data
+
+    Returns:
+    None
+
+    """
     # get all files matching extension from directory
     all_files = []
     for root, _, files in os.walk(filepath):
@@ -140,7 +197,19 @@ def process_data(cur, conn, filepath, func):
 
 
 def main():
-    """Script entrypoint"""
+    """
+    Script entrypoint.
+
+    Sets up database connection and cursor and calls functions to process data, one for each set of files.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+
+    """
+    """"""
     conn = psycopg2.connect(
         "host=127.0.0.1 dbname=sparkifydb user=student password=student"
     )
