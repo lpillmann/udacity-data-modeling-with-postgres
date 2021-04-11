@@ -90,7 +90,7 @@ def process_log_file(conn, cur, filepath):
     Process log file to insert time, users and songplays data.
 
     Receives a filepath, reads it into pandas DataFrame and selects set of columns for time, user, and
-    songplay tables to be inserted, passing it as lists to `execute` function. 
+    songplay tables to be inserted, passing it as lists to `execute` function.
 
     Parameters:
     conn (psycopg2.connect()): Postgres connection object
@@ -128,9 +128,7 @@ def process_log_file(conn, cur, filepath):
         execute(conn, cur, time_table_insert, list(row))
 
     # load user table
-    user_df = df[
-        ["userId", "firstName", "lastName", "gender", "level"]
-    ]
+    user_df = df[["userId", "firstName", "lastName", "gender", "level"]]
 
     # insert user records
     for _, row in user_df.iterrows():
