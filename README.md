@@ -2,7 +2,7 @@
 This repository contains the code for the first project in Udacity's Data Engineering Nanodegree program.
 
 ## Overview
-The project consists of extracting data from JSON files and load them into a Postgres database, modeling in a star schema with a fact table for **songplays** and several dimensions for **songs**, **artists**, **users** and **time**.
+The project consists of extracting data from JSON files, modeling it in a star schema with a fact table for **songplays** and several dimensions (**songs**, **artists**, **users** and **time**) and loading them into a Postgres database.
 
 Below the repository structure and files are described:
 ```
